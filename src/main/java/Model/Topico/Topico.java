@@ -4,9 +4,19 @@ import Model.Curso.Curso;
 import Model.Respuesta.Respuesta;
 import Model.Usuario.Usuario;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Table (name="topicos")
+@Entity(name="Topico")
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of="id")
 
 public class Topico {
 
