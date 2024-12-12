@@ -26,4 +26,8 @@ public record DatosTopico(
         @NotNull
         Respuesta respuesta
 ) {
+        public DatosTopico(Topico topico) {
+                this(topico.getTitulo(), topico.getMensaje(), topico.getFechaCreacion(),
+                        topico.getStatus(), topico.getAutor(), topico.getCurso(), topico.getRespuesta());
+        }
 }
