@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table (name="topicos")
 @Entity(name="Topico")
@@ -23,19 +25,23 @@ public class Topico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     private String titulo;
     private String mensaje;
     private LocalDateTime fechaCreacion;
     private String status;
 
-    @Embedded
+    @ManyToOne
+    @JoinColumn(name = "autor_id")
     private Usuario autor;
 
-    @Embedded
+    @ManyToOne
+    @JoinColumn(name = "curso_id")
     private Curso curso;
 
-    @Embedded
-    private Respuesta respuesta;
+
+    @OneToMany(mappedBy = "topico", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Respuesta> respuestas;
 
     public Topico(DatosTopico datosTopico) {
         this.titulo= datosTopico.titulo();
@@ -44,6 +50,10 @@ public class Topico {
         this.status= datosTopico.status();
         this.autor= datosTopico.autor();
         this.curso= datosTopico.curso();
-        this.respuesta= datosTopico.respuesta();
+        this.respuestas= datosTopico.respuestas();
+    }
+
+    public long getId() {
+        return id;
     }
 }

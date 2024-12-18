@@ -8,7 +8,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.List;
+
 
 public record DatosTopico(
         @NotBlank
@@ -24,10 +25,9 @@ public record DatosTopico(
         @NotNull
         Curso curso,
         @NotNull
-        Respuesta respuesta
+        List<Respuesta> respuestas
 ) {
-        public DatosTopico(Topico topico) {
-                this(topico.getTitulo(), topico.getMensaje(), topico.getFechaCreacion(),
-                        topico.getStatus(), topico.getAutor(), topico.getCurso(), topico.getRespuesta());
-        }
+
+
+
 }

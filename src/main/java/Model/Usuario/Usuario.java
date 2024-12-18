@@ -39,6 +39,10 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "topicos_id")
     private Topico topico;
 
+    public long getId() {
+        return id;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
