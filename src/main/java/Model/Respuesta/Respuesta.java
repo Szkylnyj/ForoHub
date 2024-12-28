@@ -5,45 +5,69 @@ import Model.Usuario.Usuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Table(name="respuestas")
-@Entity(name= "Respuesta")
+
+@Entity(name="Respuesta")
+@Table(name = "respuestas")
 @Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(of="id")
-
 public class Respuesta {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
-    @NotBlank
-    private String mensaje;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "topico_id")
+    private Long id;
+    private LocalDateTime creationDate;
+    private String solution;
+    @OneToOne
+    @JoinColumn(name="author", referencedColumnName="id")
+    private Usuario author;
+    @OneToOne
+    @JoinColumn(name="topico", referencedColumnName="id")
     private Topico topico;
-    @NotNull
-    private LocalDateTime fechaCreacion;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="usuarios_id")
-    private Usuario autor;
-    @NotBlank
-    private String solucion;
+    private boolean active;
 
-    public Respuesta(DatosRespuesta datosRespuesta) {
-        this.mensaje= datosRespuesta.mensaje();
-        this.topico=datosRespuesta.topico();
-        this.fechaCreacion=datosRespuesta.fechaCreacion();
-        this.autor= datosRespuesta.autor();
-        this.solucion= datosRespuesta.solucion();
+    public Respuesta(Long id, String solution, Usuario usuario, Topico topico, LocalDateTime creationDate) {
+        this.id=id;
+        this.solution=solution;
+        this.author=usuario;
+        this.topico=topico;
+        this.creationDate=LocalDateTime.now();
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Usuario getAuthor() {
+        return author;
+    }
+
+    public String getSolution() {
+        return solution;
+    }
+
+    public Topico getTopico() {
+        return topico;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void respuestaActualizada(RespuestaActualizadaDTO respuestaActualizadaDTO) {
+        if (respuestaActualizadaDTO.solution() != null){
+            this.solution=respuestaActualizadaDTO.solution();
+        }
+    }
+    public void diactivateResponse(){
+
+        this.active=false;
     }
 }

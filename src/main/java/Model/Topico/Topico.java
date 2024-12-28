@@ -1,7 +1,5 @@
 package Model.Topico;
 
-import Model.Curso.Curso;
-import Model.Respuesta.Respuesta;
 import Model.Usuario.Usuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,50 +8,89 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
-@Table (name="topicos")
+
+
+
 @Entity(name="Topico")
+@Table(name="topicos")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of="id")
-
+@EqualsAndHashCode(of = "id")
 public class Topico {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
+    private String title;
+    private String message;
+    private LocalDateTime date;
+    @Enumerated(EnumType.STRING)
+    private Status status;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name= "author_id")
+    private Usuario author;
+    private String course;
+    private boolean active;
 
-    private String titulo;
-    private String mensaje;
-    private LocalDateTime fechaCreacion;
-    private String status;
-
-    @ManyToOne
-    @JoinColumn(name = "autor_id")
-    private Usuario autor;
-
-    @ManyToOne
-    @JoinColumn(name = "curso_id")
-    private Curso curso;
-
-
-    @OneToMany(mappedBy = "topico", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Respuesta> respuestas;
-
-    public Topico(DatosTopico datosTopico) {
-        this.titulo= datosTopico.titulo();
-        this.mensaje= datosTopico.mensaje();
-        this.fechaCreacion=datosTopico.fechaCreacion();
-        this.status= datosTopico.status();
-        this.autor= datosTopico.autor();
-        this.curso= datosTopico.curso();
-        this.respuestas= datosTopico.respuestas();
+    public Topico(Long id, String title, String message, LocalDateTime date, Status status, Usuario usuario, String curso) {
+        this.id=id;
+        this.title=title;
+        this.message=message;
+        this.date = date;
+        this.date=LocalDateTime.now();
+        this.status=status;
+        this.author=usuario;
+        this.course=curso;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public Usuario getAuthor() {
+        return author;
+    }
+
+    public String getCourse() {
+        return course;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void topicoActualizado(TopicoActualizadoDTO topicoActualizadoDTO) {
+        if (topicoActualizadoDTO.title() !=null){
+            this.title= topicoActualizadoDTO.title();
+        }
+        if (topicoActualizadoDTO.message() != null){
+            this.message=topicoActualizadoDTO.message();
+        }
+        if (topicoActualizadoDTO.status() != null){
+            this.status=topicoActualizadoDTO.status();
+        }
+        if (topicoActualizadoDTO.curso() != null){
+            this.course=topicoActualizadoDTO.curso();
+        }
+    }
+    public void diactivateTopic(){
+        this.active=false;
     }
 }

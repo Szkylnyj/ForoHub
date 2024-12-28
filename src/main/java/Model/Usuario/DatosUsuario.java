@@ -1,11 +1,10 @@
 package Model.Usuario;
 
-import Model.Perfil.Perfil;
-import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record DatosUsuario(
+        Long id,
         @NotBlank
         String nombre,
         @Email
@@ -13,7 +12,25 @@ public record DatosUsuario(
         String correoElectronico,
         @NotBlank
         String contrasena,
-        @Embedded
-        Perfil perfiles
+        @NotBlank
+        String username
         ) {
+
+        public void DatosUsuarios(Long id, String nombre) {
+        }
+
+        public Long getId() {
+                return id;
+        }
+
+        public String getNombre() {
+                return nombre;
+        }
+
+        public String getCorreoElectronico() {
+                return correoElectronico;
+        }
+
+        public @NotBlank String username() { return username;
+        }
 }

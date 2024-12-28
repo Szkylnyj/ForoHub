@@ -1,11 +1,13 @@
 package seguridad;
 
+import Model.Usuario.UsuarioRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import Model.Usuario.Usuario;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,49 +15,52 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+
+
 @Service
 public class TokenService {
-    @Value("${api.security.secret}")
-    private String apiSecret;
-
-    public String generarToken(Usuario usuario) {
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    public String generarToken(Usuario usuario){
         try {
-            Algorithm algorithm = Algorithm.HMAC256(apiSecret);
+            Algorithm algorithm = Algorithm.HMAC256(usuario.getPassword());
             return JWT.create()
-                    .withIssuer("voll med")
+                    .withIssuer("api")
                     .withSubject(usuario.getUsername())
-                    .withClaim("id", usuario.getId())
-                    .withExpiresAt(generarFechaExpiracion())
+                    .withClaim("id",usuario.getId())
+                    .withExpiresAt(expirationdate())
                     .sign(algorithm);
-        } catch (JWTCreationException exception){
+        } catch (JWTCreationException exception) {
             throw new RuntimeException();
         }
     }
-
-    public String getSubject(String token) {
+    public String getSubject(String token){
         if (token == null) {
-            throw new RuntimeException();
+            throw new IllegalArgumentException("El token es nulo.");
         }
-        DecodedJWT verifier = null;
         try {
-            Algorithm algorithm = Algorithm.HMAC256(apiSecret); // validando firma
-            verifier = JWT.require(algorithm)
-                    .withIssuer("voll med")
+            DecodedJWT decodedJWT = JWT.decode(token);
+            String username = decodedJWT.getSubject();
+            if (username == null) {
+                throw new IllegalArgumentException("Token no válido: Asunto no encontrado");
+            }
+            Usuario usuario = (Usuario) usuarioRepository.findByEmail(username);
+            if (usuario == null) {
+                throw new IllegalArgumentException("Usuario no encontrado por nombre de usuario: " + username);
+            }
+
+            Algorithm algorithm = Algorithm.HMAC256(usuario.getPassword());
+            DecodedJWT verifier = JWT.require(algorithm)
+                    .withIssuer("api")
                     .build()
                     .verify(token);
-            verifier.getSubject();
-        } catch (JWTVerificationException exception) {
-            System.out.println(exception.toString());
-        }
-        if (verifier.getSubject() == null) {
-            throw new RuntimeException("Verifier invalido");
-        }
-        return verifier.getSubject();
-    }
 
-    private Instant generarFechaExpiracion() {
+            return verifier.getSubject();
+        } catch (JWTVerificationException | IllegalArgumentException e) {
+            throw new IllegalArgumentException("Token no válido: " + e.getMessage(), e);
+        }
+    }
+    private Instant expirationdate(){
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-05:00"));
     }
-
-
 }

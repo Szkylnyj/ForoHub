@@ -1,42 +1,103 @@
 package Controller;
 
 
-import Model.Topico.DatosTopico;
-import Model.Topico.Topico;
-import Model.Topico.TopicoRepository;
+import Errores.ValidacionDeIntegridad;
+import Model.Topico.*;
+import Model.Usuario.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
+@ResponseBody
 @RequestMapping("/topico")
+@SecurityRequirement(name="bearer-key")
 public class TopicoController {
-
     @Autowired
     private TopicoRepository topicoRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private TopicoService topicoService;
 
-    @PostMapping
-    public ResponseEntity<?> registrarTopico(@RequestBody @Valid DatosTopico datosTopico, UriComponentsBuilder uriComponentsBuilder) {
+    /***********************************
+     * REST API POST
+     * Registrar nuevo Topico
+     * ENDPOINT :
+     * http://localhost:8080/topico/topico
+     *************************************/
+    @PostMapping("/topico")
+    @Transactional
+    public ResponseEntity topicoRegistrado(@RequestBody @Valid TopicoDTO topicoDTO) throws ValidacionDeIntegridad {
+        var topicoRegistrado = topicoService.topicoCreado(topicoDTO);
+        return ResponseEntity.ok(topicoRegistrado);
+    }
 
-        // Verifica si el tópico ya existe para evitar duplicados
-        if (topicoRepository.findByTituloAndMensaje(datosTopico.titulo(), datosTopico.mensaje()).isPresent()) {
-            return ResponseEntity.badRequest().body("Tópico duplicado no permitido");
-        }
+    /**************************************
+     * REST API GET
+     * Obtener todos los Topicos
+     * ENDPOINT :
+     * http://localhost:8080/topico/topicos
+     ***************************************/
+    @GetMapping("/topicos")
+    public ResponseEntity<Page<ListarTopicosDTO>>  listarTopicos(@PageableDefault(size = 10) Pageable paged){
+        return ResponseEntity.ok(topicoRepository.findByActiveTrue(paged).map(ListarTopicosDTO::new));
+    }
 
-        // Guarda el tópico en la base de datos
-        Topico topico = topicoRepository.save(new Topico(datosTopico));
+    /************************************************
+     * REST API PUT
+     * Actualizar un topico por id
+     * ENDPOINT :
+     * http://localhost:8080/topico/1
+     *************************************************/
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity topicoActualizado (@RequestBody @Valid TopicoActualizadoDTO topicoActualizadoDTO){
+        Topico topico= topicoRepository.getReferenceById(topicoActualizadoDTO.id());
+        topico.topicoActualizado(topicoActualizadoDTO);
+        return ResponseEntity.ok(new RespuestaTopicoDTO(topico.getId(),
+                topico.getTitle(),topico.getMessage(),
+                topico.getStatus(),topico.getAuthor().getId(),
+                topico.getCourse(),topico.getDate()));
+    }
 
-        // Construye la URI del nuevo recurso creado
+    /************************************************
+     * REST API DELETE
+     * Eliminar un topico por id
+     * ENDPOINT :
+     * http://localhost:8080/topico/1
+     *************************************************/
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity eliminarTopico(@PathVariable Long id){
+        Topico topico= topicoRepository.getReferenceById(id);
+        topico.diactivateTopic();
+        return ResponseEntity.noContent().build();
+    }
 
-        var uri = uriComponentsBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
-
-        // Retorna la respuesta con el estado 201 Created
-        return ResponseEntity.created(uri).body(topico);
-
+    /*******************************************
+     * REST API GET
+     * Obtener un Topico pasando el id
+     * ENDPOINT :
+     * http://localhost:8080/topico/1
+     ********************************************/
+    @GetMapping("/{id}")
+    public ResponseEntity <RespuestaTopicoDTO> respuestaTopico(@PathVariable Long id){
+        Topico topico = topicoRepository.getReferenceById(id);
+        var topicoId = new RespuestaTopicoDTO(topico.getId(),
+                topico.getTitle(),
+                topico.getMessage(),
+                topico.getStatus(),
+                topico.getAuthor().getId(),
+                topico.getCourse(),
+                topico.getDate());
+        return ResponseEntity.ok(topicoId);
     }
 }
